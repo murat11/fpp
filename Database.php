@@ -2,25 +2,36 @@
 
 namespace FpDbTest;
 
-use Exception;
-use mysqli;
+use FpDbTest\Placeholder\PlaceholderReplacer;
+use FpDbTest\Placeholder\Skip;
+use FpDbTest\QueryTemplate\QueryTemplateProcessor;
 
-class Database implements DatabaseInterface
+final readonly class Database implements DatabaseInterface
 {
-    private mysqli $mysqli;
+//    private mysqli $mysqli;
 
-    public function __construct(mysqli $mysqli)
+    private PlaceholderReplacer $placeholderReplacer;
+
+    public function __construct()
     {
-        $this->mysqli = $mysqli;
+//        $this->mysqli = $mysqli;
+        $this->placeholderReplacer = PlaceholderReplacer::create();
     }
 
     public function buildQuery(string $query, array $args = []): string
     {
-        throw new Exception();
+        $queryBuilderAssistant = new QueryTemplateProcessor(
+            allowedPlaceholders: PlaceholderReplacer::ALLOWED_TAGS,
+            placeholderCallback: function (mixed $value, string $placeholderTag = null): string {
+                return $this->placeholderReplacer->format($value, $placeholderTag);
+            }
+        );
+
+        return $queryBuilderAssistant->processQueryTemplate($query, $args);
     }
 
     public function skip()
     {
-        throw new Exception();
+        return new Skip();
     }
 }
